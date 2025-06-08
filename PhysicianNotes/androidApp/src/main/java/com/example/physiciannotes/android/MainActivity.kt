@@ -96,8 +96,12 @@ fun App(service: NoteService) {
                 ) {
                     items(notes) { note ->
                         NoteCard(note, onAdd = {
+                            service.addNote("New note")
+                            notes = service.listNotes().sortedByDescending { it.date }
+
                             recording = true
                             service.startVoiceNote()
+
                         }, onClick = { selectedNote = note })
                         Spacer(Modifier.height(8.dp))
                     }

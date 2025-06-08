@@ -30,5 +30,14 @@ class NoteService(
         repository.save(note)
     }
 
+    suspend fun addNote(text: String) {
+        val note = Note(
+            id = Random.nextBytes(8).joinToString("") { it.toInt().toString(16) },
+            date = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+            text = text
+        )
+        repository.save(note)
+    }
+
     suspend fun listNotes(): List<Note> = repository.getAll()
 }
