@@ -10,6 +10,7 @@ import androidx.compose.foundation.pointerinput.pointerMoveFilter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,6 +36,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun App(service: NoteService) {
     var notes by remember { mutableStateOf(listOf<Note>()) }
+    var recording by remember { mutableStateOf(false) }
     var drawerOpen by remember { mutableStateOf(false) }
     var selectedNote by remember { mutableStateOf<Note?>(null) }
 
@@ -73,6 +75,19 @@ fun App(service: NoteService) {
                         }
                     }
                 )
+            },
+            floatingActionButton = {
+                FloatingActionButton(onClick = {
+                    recording = !recording
+                    if (recording) {
+                        service.startVoiceNote()
+                    } else {
+                        service.saveVoiceNote()
+                        notes = service.listNotes().sortedByDescending { it.date }
+                    }
+                }) {
+                    Icon(Icons.Default.Mic, contentDescription = "Record")
+                }
             }
         ) { padding ->
             if (selectedNote == null) {
@@ -83,6 +98,10 @@ fun App(service: NoteService) {
                         NoteCard(note, onAdd = {
                             service.addNote("New note")
                             notes = service.listNotes().sortedByDescending { it.date }
+
+                            recording = true
+                            service.startVoiceNote()
+
                         }, onClick = { selectedNote = note })
                         Spacer(Modifier.height(8.dp))
                     }
