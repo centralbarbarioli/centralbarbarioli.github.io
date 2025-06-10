@@ -19,13 +19,15 @@ ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_ansible -N ""
 ```bash
 ssh-copy-id -i ~/.ssh/id_ed25519_ansible.pub root@192.168.0.30
 ```
+**Project layout**
+```text
 ansible-proxmox-android/
 ├── inventory.yml
 ├── group_vars/
 │   └── all.yml
 ├── create-vm.yml
 └── configure-vm.yml
-
+```
 ## 1. Inventory (`inventory.yml`)
 
 ```yaml
