@@ -1,0 +1,72 @@
+# configure-vm.yml
+- name: Configure Android development environment
+  hosts: android-dev-vm
+  become: true
+
+  vars:
+    android_sdk_root: /opt/android-sdk
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_debian_frontend: noninteractive
+  tasks:
+    - name: Ensure OpenJDK & essentials are installed
+      apt:
+        name:
+          - openjdk-17-jdk
+          - unzip
+          - curl
+          - openssh-server
+        update_cache: yes
+
+    - name: Add SSH public key for devuser
+      authorized_key:
+        user: "{{ ansible_user }}"
+        key: "{{ vm_ssh_key }}"
+
+    - name: Download & unpack Android Studio
+      get_url:
+        url: https://dl.google.com/dl/android/studio/ide-zips/2023.3.1.20/android-studio-2023.3.1.20-linux.tar.gz
+        dest: /tmp/android-studio.tar.gz
+      register: studio_dl
+
+    - name: Extract Android Studio
+      unarchive:
+        src: /tmp/android-studio.tar.gz
+        dest: /opt/
+        remote_src: yes
+
+    - name: Symlink android-studio launcher
+      file:
+        src: /opt/android-studio/bin/studio.sh
+        dest: /usr/local/bin/android-studio
+        state: link
+
+    - name: Install Android SDK command-line tools
+      shell: |
+        mkdir -p {{ android_sdk_root }}/cmdline-tools
+        cd {{ android_sdk_root }}/cmdline-tools
+        curl -o tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+        unzip -q tools.zip && rm tools.zip
+      args:
+        creates: "{{ android_sdk_root }}/cmdline-tools/bin/sdkmanager"
+
+    - name: Install SDK packages
+      shell: |
+        yes | {{ android_sdk_root }}/cmdline-tools/bin/sdkmanager \
+          "platform-tools" "platforms;android-33" "emulator" "system-images;android-33;google_apis;x86_64"
+      environment:
+        ANDROID_SDK_ROOT: "{{ android_sdk_root }}"
+      args:
+        creates: "{{ android_sdk_root }}/platform-tools/adb"
+
+    - name: (Optional) Install X2Go server for remote GUI
+      apt:
+        name:
+          - x2goserver
+          - x2goserver-xsession
+        state: present
+
+    - name: Reboot to finalize setup
+      reboot:
+        msg: "Rebooting after Android Studio install"
+        pre_reboot_delay: 10
+

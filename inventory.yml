@@ -1,0 +1,10 @@
+# inventory.yml
+all:
+  hosts:
+    proxmox:
+      ansible_host: 192.168.0.30   # ← the IP you use to reach the Proxmox API/UI
+      ansible_user: root           # ← the SSH user (for later plays, if any)
+      ansible_ssh_private_key_file: ~/.ssh/id_ed25519_ansible
+    android-dev-vm:
+      ansible_host: 192.168.0.42   # ← will be filled in dynamically after VM creation
+      ansible_user: devuser

@@ -1,0 +1,98 @@
+---
+- name: Create and provision Android-Dev VM on Proxmox
+  hosts: proxmox
+  connection: ssh
+  gather_facts: false
+  become: false
+
+  vars:
+    # Debian 12 cloud image (Bookworm)
+    cloud_image_url:  https://cdimage.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2
+    cloud_image_dest: /var/lib/vz/images/debian-12-genericcloud-amd64.qcow2
+
+    # Your desired VM networking
+    vm_net_ip:        "192.168.1.42/24,gw=192.168.1.1"
+
+  tasks:
+    - name: Ensure Proxmox images directory exists
+      ansible.builtin.file:
+        path:  /var/lib/vz/images
+        state: directory
+        mode: '0755'
+
+    - name: Download Debian 12 cloud image if missing
+      ansible.builtin.get_url:
+        url:   "{{ cloud_image_url }}"
+        dest:  "{{ cloud_image_dest }}"
+        mode:  '0644'
+        force: no
+
+    - name: Create VM config (no disks) via API
+      delegate_to: localhost
+      community.general.proxmox_kvm:
+        api_user:       "{{ proxmox_user }}"
+        api_password:   "{{ proxmox_password }}"
+        api_host:       "{{ hostvars['proxmox'].ansible_host }}"
+        api_port:       8006
+        validate_certs: false
+        node:           "{{ proxmox_node }}"
+        vmid:           "{{ vm_id }}"
+        name:           "{{ vm_name }}"
+        cores:          "{{ vm_cores }}"
+        memory:         "{{ vm_memory }}"
+        ostype:         l26
+        scsihw:         virtio-scsi-pci
+        net:
+          net0: "virtio,bridge={{ vm_bridge }}"
+        boot:           d      # boot from “CD” first (we’ll swap to disk)
+        full:           true
+        state:          present
+
+    - name: Import cloud-image into VM as a RAW scsi0 disk
+      ansible.builtin.command:
+        cmd: >
+          /usr/sbin/qm importdisk {{ vm_id }}
+          {{ cloud_image_dest }}
+          local
+        creates: "/var/lib/vz/images/{{ vm_id }}/vm-{{ vm_id }}-disk-0.raw"
+
+    - name: Attach the imported raw disk and set it as bootdisk
+      delegate_to: proxmox
+      become: true
+      ansible.builtin.command:
+        cmd: >
+          qm set {{ vm_id }}
+            --scsi0 local:{{ vm_id }}/vm-{{ vm_id }}-disk-0.raw
+            --bootdisk scsi0 --boot c
+
+    - name: Configure Cloud-Init drive (user, network & SSH key) via API
+      delegate_to: localhost
+      community.general.proxmox_kvm:
+        api_user:       "{{ proxmox_user }}"
+        api_password:   "{{ proxmox_password }}"
+        api_host:       "{{ hostvars['proxmox'].ansible_host }}"
+        api_port:       8006
+        validate_certs: false
+        node:           "{{ proxmox_node }}"
+        vmid:           "{{ vm_id }}"
+        ide:
+          ide2: local:cloudinit
+        ciuser:     devuser
+        cipassword: yourpassword
+        ipconfig:
+          ipconfig0: "{{ vm_net_ip }}"
+        sshkeys:    "{{ lookup('file','~/.ssh/id_ed25519_ansible.pub') }}"
+        state:      present
+
+    - name: Start the VM via API
+      delegate_to: localhost
+      community.general.proxmox_kvm:
+        api_user:       "{{ proxmox_user }}"
+        api_password:   "{{ proxmox_password }}"
+        api_host:       "{{ hostvars['proxmox'].ansible_host }}"
+        api_port:       8006
+        validate_certs: false
+        node:           "{{ proxmox_node }}"
+        vmid:           "{{ vm_id }}"
+        state:          started
+
