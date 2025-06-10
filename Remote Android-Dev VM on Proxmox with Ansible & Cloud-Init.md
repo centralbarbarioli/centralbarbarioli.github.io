@@ -16,7 +16,9 @@ ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_ansible -N ""
 ```
 
 4. **Copy your public key** to Proxmox’s root account:
-
+```bash
+ssh-copy-id -i ~/.ssh/id_ed25519_ansible.pub root@192.168.0.30
+```
 ansible-proxmox-android/
 ├── inventory.yml
 ├── group_vars/
