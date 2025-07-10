@@ -6,8 +6,8 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
-    // prevent modules from declaring their own repositories
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    // prefer repositories defined here but allow project repositories if needed
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
         mavenCentral()

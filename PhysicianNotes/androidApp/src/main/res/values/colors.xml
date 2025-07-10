@@ -1,4 +1,9 @@
 <resources>
     <color name="purple40">#7e57c2</color>
     <color name="purple80">#b39ddb</color>
+    <!-- Default theme colors required by themes.xml -->
+    <color name="yourStatusBarColor">#6200EE</color>
+    <color name="yourNavigationBarColor">#6200EE</color>
+    <color name="yourPrimaryColor">#6200EE</color>
+    <color name="yourOnPrimaryColor">#FFFFFF</color>
 </resources>
