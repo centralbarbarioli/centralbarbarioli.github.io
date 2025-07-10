@@ -1,7 +1,7 @@
 # group_vars/all.yml
 proxmox_api_url: https://{{ hostvars['proxmox'].ansible_host }}:8006/api2/json
 proxmox_user: root@pam
-proxmox_password: senha        # or reference an Ansible Vault variable
+proxmox_password: 159kop        # or reference an Ansible Vault variable
 proxmox_node: homelab
 vm_name: android-dev
 vm_id: 110

@@ -1,0 +1,5 @@
+R_DEF: Internal format may change without notice
+local
+color purple40
+color purple80
+style Theme.PhysicianNotes

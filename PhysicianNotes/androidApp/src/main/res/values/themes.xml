@@ -1,3 +1,14 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.PhysicianNotes" parent="Theme.Material3.DayNight.NoActionBar" />
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Base application theme, using MaterialComponents DayNight with no ActionBar -->
+  <style name="Theme.PhysicianNotes" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <!-- Status bar color -->
+    <item name="android:statusBarColor">@color/yourStatusBarColor</item>
+    <!-- Navigation bar color (optional) -->
+    <item name="android:navigationBarColor">@color/yourNavigationBarColor</item>
+    <!-- Example: override the primary color -->
+    <item name="colorPrimary">@color/yourPrimaryColor</item>
+    <item name="colorOnPrimary">@color/yourOnPrimaryColor</item>
+    <!-- Add any other customizations below -->
+  </style>
 </resources>

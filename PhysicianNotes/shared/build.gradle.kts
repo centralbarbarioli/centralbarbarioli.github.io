@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
@@ -14,6 +16,7 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
                 implementation("com.russhwolf:multiplatform-settings:1.0.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
             }
         }
         val androidMain by getting
@@ -38,4 +41,12 @@ android {
     defaultConfig {
         minSdk = 24
     }
+}
+
+
+// force all Kotlin compile tasks to target Java 1.8
+tasks.withType<KotlinCompile>().configureEach {
+  kotlinOptions {
+    jvmTarget = "1.8"
+  }
 }

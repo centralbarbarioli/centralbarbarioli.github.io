@@ -16,11 +16,14 @@
           - curl
           - openssh-server
         update_cache: yes
-
-    - name: Add SSH public key for devuser
+    - name: Add SSH key for your WSL user
+      vars:
+        wsl_user: "{{ ansible_env.SUDO_USER | default(lookup('env','USER')) }}"
+        wsl_home:  "/home/{{ wsl_user }}"
       authorized_key:
-        user: "{{ ansible_user }}"
-        key: "{{ vm_ssh_key }}"
+        user: "{{ wsl_user }}"
+        key:  "{{ lookup('file', wsl_home + '/.ssh/id_ed25519_ansible.pub') }}"
+        manage_dir: true
 
     - name: Download & unpack Android Studio
       get_url:
@@ -40,19 +43,25 @@
         dest: /usr/local/bin/android-studio
         state: link
 
-    - name: Install Android SDK command-line tools
+    - name: Download & install Android SDK command-line tools
       shell: |
+        curl -sSL -o /tmp/cmdline-tools.zip \
+          https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
         mkdir -p {{ android_sdk_root }}/cmdline-tools
-        cd {{ android_sdk_root }}/cmdline-tools
-        curl -o tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-        unzip -q tools.zip && rm tools.zip
+        unzip -q /tmp/cmdline-tools.zip -d {{ android_sdk_root }}/cmdline-tools
+        mv {{ android_sdk_root }}/cmdline-tools/cmdline-tools \
+          {{ android_sdk_root }}/cmdline-tools/latest
+        rm /tmp/cmdline-tools.zip
       args:
-        creates: "{{ android_sdk_root }}/cmdline-tools/bin/sdkmanager"
+        creates: "{{ android_sdk_root }}/cmdline-tools/latest/bin/sdkmanager"
 
     - name: Install SDK packages
       shell: |
-        yes | {{ android_sdk_root }}/cmdline-tools/bin/sdkmanager \
-          "platform-tools" "platforms;android-33" "emulator" "system-images;android-33;google_apis;x86_64"
+        yes | {{ android_sdk_root }}/cmdline-tools/latest/bin/sdkmanager \
+          "platform-tools" \
+          "platforms;android-33" \
+          "emulator" \
+          "system-images;android-33;google_apis;x86_64"
       environment:
         ANDROID_SDK_ROOT: "{{ android_sdk_root }}"
       args:
